@@ -80,24 +80,26 @@ def generate_query(ds_name, interval):
                     if userQuery:
                         for i, query in enumerate(userQuery):
                             result = (query["AnonID"], query["Query"], updatedQuery[i], resultURLs)
-                            results.append(result)
-                            print(query["QueryTime"], len(userQuery), result)
+                            if i > 0:
+                                if userQuery[i]["Query"] != userQuery[i - 1]["Query"] and pd.Timedelta(abs(pd.Timestamp(userQuery[i]["QueryTime"]) - pd.Timestamp(userQuery[i-1]["QueryTime"]))).seconds >60:
+                                    print(query["QueryTime"], len(userQuery), result)
+                                    results.append(result)
+                            else:
+                                print(query["QueryTime"], len(userQuery), result)
+                                results.append(result)
                     elif correctQuery:
                         for i, query in enumerate(correctQuery):
                             result = (query["AnonID"], query["Query"], updatedQuery[i], resultURLs)
-                            results.append(result)
                             if i > 0:
-                                if correctQuery[i]["Query"] != correctQuery[i - 1]["Query"] or correctQuery[i][
-                                    "QueryTime"] != correctQuery[i - 1]["QueryTime"]:
+                                if correctQuery[i]["Query"] != correctQuery[i - 1]["Query"] or pd.Timedelta(abs(pd.Timestamp(correctQuery[i]["QueryTime"]) - pd.Timestamp(correctQuery[i-1]["QueryTime"]))).seconds >60:
+                                    results.append(result)
                                     print(query["QueryTime"], len(userQuery), result)
 
                             else:
+                                results.append(result)
                                 print(query["QueryTime"], len(userQuery), result)
                         if concurrentRowIndex == groupLength - 1 or concurrentRowIndex == groupLength:
-                            print(
-                                f"{concurrentRow['QueryTime']} ({concurrentRow['AnonID']},'{concurrentRow['Query']}','NULL',[({concurrentRow['ItemRank']},'{concurrentRow['ClickURL']})])'")
-                            # results.append(query["AnonID"], query["Query"], updatedQuery[i], resultURLs)
-
+                            print(f"{concurrentRow['QueryTime']} ({concurrentRow['AnonID']},'{concurrentRow['Query']}','NULL',[({concurrentRow['ItemRank']},'{concurrentRow['ClickURL']})])'")
                 skip = concurrentRowIndex
     store_result(dataset_name,results)
 generate_query(dataset_name,time_interval)
